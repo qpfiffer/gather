@@ -1,0 +1,6 @@
+.*.swp
+*.swp
+.hsenv/
+dist/
+snaplets/
+.virthualenv/
