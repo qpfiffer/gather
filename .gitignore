@@ -4,3 +4,4 @@
 dist/
 snaplets/
 .virthualenv/
+dependencies/kyotocabinet-1.2.76/
