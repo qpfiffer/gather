@@ -116,6 +116,13 @@ runCommand _ = BS.putStrLn "Must specify a database location."
 openURL :: String -> IO String
 openURL x = NH.getResponseBody =<< NH.simpleHTTP (NH.getRequest x)
 
+getTitle :: [Tag String] -> T.Text
+getTitle tags = T.pack title_of_page
+  where
+    -- (!! 0) get the first tag that matches.
+    -- ((!! 0) !! 1) get the actual text of the tag.
+    TagText title_of_page = (sections (~== ("<title>" :: String)) tags) !! 0 !! 1
+
 -- DB Utils
 urlInDb :: Text -> KcDb -> IO (Either String Bool)
 urlInDb test_url database = do
@@ -147,6 +154,5 @@ insertUrl posted_url poster db = do
         (Right True) -> return $ InsertResult "Someone tried to submit a duplicate URL."
         (Right False) -> do
             tags <- fmap parseTags $ openURL $ BS.unpack posted_url
-            let titles = sections (~== ("<title>" :: String)) tags
-            return $ InsertResult $ T.pack $ innerText $ Prelude.head titles
+            return $ InsertResult $ getTitle tags
         (Left msg) -> return $ InsertResult $ T.pack msg
