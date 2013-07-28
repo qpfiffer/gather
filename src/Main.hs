@@ -43,7 +43,7 @@ submitHandler db_location = do
         Right pld -> do
             -- #DEBUG
             -- liftIO $ BS.putStrLn $ BS.concat [normalUrl pld, ", ", normalPerson pld]
-            result <- liftIO $ kcwithdbopen (BS.unpack db_location) [] [KCOWRITER, KCOCREATE] (insertUrl (normalUrl pld) (normalPerson pld))
+            result <- liftIO $ db_func $ insertUrl (normalUrl pld) (normalPerson pld)
             modifyResponse $ setContentType "application/json"
             writeLBS $ A.encode $ result
         Left _ -> do
@@ -52,3 +52,4 @@ submitHandler db_location = do
   where
     normalUrl a = TE.encodeUtf8 $ pldUrl a
     normalPerson a = TE.encodeUtf8 $ pldPerson a
+    db_func insert_func = kcwithdbopen (BS.unpack db_location) [] [KCOWRITER, KCOCREATE] insert_func
