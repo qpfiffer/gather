@@ -15,12 +15,7 @@ import           Snap.Http.Server
 import           Snap.Extras.JSON
 import           System.Environment
 
-person_colors :: [BS.ByteString]
-person_colors = ["#FFD923", "#AA2BEF", "#366EEF", "#A68B0B"]
-filter_max :: Integer
-filter_max = 50
 
--- Snap stuff
 runCommand :: [BS.ByteString] -> IO ()
 runCommand ["-db", db_location] =
     httpServe defaultConfig $ site db_location

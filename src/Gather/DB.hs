@@ -2,6 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Gather.DB where
 
+import           Gather.Summarize
 import           Gather.Types
 import           Gather.Utils
 
@@ -15,6 +16,12 @@ import           Database.KyotoCabinet.Db
 import           Text.HTML.TagSoup
 
 import Prelude hiding (catch)
+
+person_colors :: [Text]
+person_colors = ["#FFD923", "#AA2BEF", "#366EEF", "#A68B0B"]
+
+filter_max :: Integer
+filter_max = 50
 
 urlInDb :: Text -> KcDb -> IO (Either String Bool)
 urlInDb test_url database = do
@@ -41,12 +48,16 @@ urlInDb test_url database = do
 
 insertUrl :: BS.ByteString -> BS.ByteString -> KcDb -> IO InsertResult
 insertUrl posted_url poster db = do
-    in_db_already <- urlInDb (TE.decodeUtf8 posted_url) db
+    let text_url = TE.decodeUtf8 posted_url
+    in_db_already <- urlInDb text_url db
     case in_db_already of
         (Right True) -> return $ InsertResult "Someone tried to submit a duplicate URL."
         (Right False) -> do
             time_submitted <- getTimeStamp
             tags <- fmap parseTags $ openURL $ BS.unpack posted_url
-            return $ InsertResult $ getTitle tags
-            --return $ InsertResult "MUDADA"
+            let page_title = getTitle tags
+                summary = summarize 300 tags
+            kcdbset db (BS.pack $ show time_submitted) $ LBS.toStrict $ A.encode $
+                LinkData time_submitted page_title text_url (TE.decodeUtf8 poster) summary (person_colors !! 0)
+            return $ InsertResult "MUDADA"
         (Left msg) -> return $ InsertResult $ T.pack msg
