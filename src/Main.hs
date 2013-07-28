@@ -34,6 +34,18 @@ data InsertResult = InsertResult
 instance ToJSON InsertResult where
     toJSON (InsertResult result) = object ["What happened?" .= result]
 
+data PostedLinkData = PostedLinkData
+    { pldUrl :: Text
+    , pldPerson :: Text
+    }
+
+instance FromJSON PostedLinkData where
+    -- Should I feel nausea at one-letter variable names?
+    parseJSON (Object v) = PostedLinkData <$>
+                           v .: "url" <*>
+                           v .: "person"
+    parseJSON _ = mzero
+
 data LinkData = LinkData
     { created_at :: Integer
     , title :: Text
@@ -78,13 +90,20 @@ site db_location =
 
 submitHandler :: BS.ByteString -> Snap ()
 submitHandler db_location = do
-    json_param <- getJSON
-    poster <- getParam "person"
-    posted_url <- getParam "url"
-    -- TODO: Don't use fromJust here.
-    result <- liftIO $ kcwithdbopen (BS.unpack db_location) [] [KCOWRITER, KCOCREATE] (insertUrl (fromJust posted_url) (fromJust poster))
-    modifyResponse $ setContentType "application/json"
-    writeLBS $ A.encode $ result
+    posted_link_data <- getJSON :: Snap (Either String PostedLinkData)
+    case posted_link_data of
+        Right pld -> do
+            -- #DEBUG
+            -- liftIO $ BS.putStrLn $ BS.concat [normalUrl pld, ", ", normalPerson pld]
+            result <- liftIO $ kcwithdbopen (BS.unpack db_location) [] [KCOWRITER, KCOCREATE] (insertUrl (normalUrl pld) (normalPerson pld))
+            modifyResponse $ setContentType "application/json"
+            writeLBS $ A.encode $ result
+        Left _ -> do
+            modifyResponse $ setContentType "application/json"
+            writeLBS $ A.encode $ InsertResult "YOU'RE DUMB"
+  where
+    normalUrl a = TE.encodeUtf8 $ pldUrl a
+    normalPerson a = TE.encodeUtf8 $ pldPerson a
 
 -- General Utils
 runCommand :: [BS.ByteString] -> IO ()
@@ -109,8 +128,8 @@ urlInDb test_url database = do
                         -- BS.putStrLn $ BS.concat [TE.encodeUtf8 u, ", ", TE.encodeUtf8 test_url]
                         kccurstepback cur
                         loop
-                        return $ Right False
-        loop `catch` \(exn::KcException) ->
+                        -- return $ Right False
+        loop `catch` \(_::KcException) ->
             kcdbecode database >>= \error_code ->
             case error_code of
                 KCENOREC -> return $ Right False
