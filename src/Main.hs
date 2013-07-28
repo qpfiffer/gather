@@ -13,11 +13,13 @@ import           Database.KyotoCabinet.Db
 import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.IO.Class (liftIO)
+import qualified Network.HTTP as NH
 import           Snap.Core
 --import           Snap.Util.FileServe
 import           Snap.Http.Server
 import           Snap.Extras.JSON
 import           System.Environment
+import           Text.HTML.TagSoup
 
 import Prelude hiding (catch)
 
@@ -111,6 +113,9 @@ runCommand ["-db", db_location] =
     httpServe defaultConfig $ site db_location
 runCommand _ = BS.putStrLn "Must specify a database location."
 
+openURL :: String -> IO String
+openURL x = NH.getResponseBody =<< NH.simpleHTTP (NH.getRequest x)
+
 -- DB Utils
 urlInDb :: Text -> KcDb -> IO (Either String Bool)
 urlInDb test_url database = do
@@ -140,5 +145,8 @@ insertUrl posted_url poster db = do
     in_db_already <- urlInDb (TE.decodeUtf8 posted_url) db
     case in_db_already of
         (Right True) -> return $ InsertResult "Someone tried to submit a duplicate URL."
-        (Right False) -> return $ InsertResult "TODO"
+        (Right False) -> do
+            tags <- fmap parseTags $ openURL $ BS.unpack posted_url
+            let titles = sections (~== ("<title>" :: String)) tags
+            return $ InsertResult $ T.pack $ innerText $ Prelude.head titles
         (Left msg) -> return $ InsertResult $ T.pack msg
