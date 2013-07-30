@@ -18,7 +18,11 @@ getTitle :: [Tag String] -> T.Text
 getTitle tags =
     T.pack that_text
   where
-    TagText that_text = sections (~== ("<title>" :: String)) tags !! 0 !! 1
+    the_sections = sections (~== ("<title>" :: String)) tags
+    TagText that_text =
+        case Prelude.length the_sections of
+            0 -> TagText ("" :: String)
+            _ -> the_sections !! 0 !! 1
 
 getTimeStamp :: IO Integer
 getTimeStamp = getClockTime >>= \(TOD unix _) -> return unix
