@@ -13,6 +13,7 @@ import           Data.ByteString.Lazy as LBS
 import           Data.Text as T
 import qualified Data.Text.Encoding as TE
 import           Database.KyotoCabinet.Db
+import           System.Random
 import           Text.HTML.TagSoup
 
 import Prelude hiding (catch)
@@ -46,6 +47,12 @@ urlInDb test_url database = do
                 KCENOREC -> return $ Right False
                 err -> return $ Left (show err) -- Something bad happened.
 
+getRandomPersonColor :: IO Text
+getRandomPersonColor = random_index >>= \rabbit ->
+    return $ person_colors !! rabbit
+  where
+    random_index = getStdRandom $ randomR (0, (Prelude.length person_colors) - 1)
+
 insertUrl :: BS.ByteString -> BS.ByteString -> KcDb -> IO InsertResult
 insertUrl posted_url poster db = do
     let text_url = TE.decodeUtf8 posted_url
@@ -55,9 +62,10 @@ insertUrl posted_url poster db = do
         (Right False) -> do
             time_submitted <- getTimeStamp
             tags <- fmap parseTags $ openURL $ BS.unpack posted_url
+            rand_color <- getRandomPersonColor
             let page_title = getTitle tags
-                summary = summarize 300 tags
+                summation = summarize 300 tags
             kcdbset db (BS.pack $ show time_submitted) $ LBS.toStrict $ A.encode $
-                LinkData time_submitted page_title text_url (TE.decodeUtf8 poster) summary (person_colors !! 0)
+                LinkData time_submitted page_title text_url (TE.decodeUtf8 poster) summation rand_color
             return $ InsertResult "MUDADA"
         (Left msg) -> return $ InsertResult $ T.pack msg

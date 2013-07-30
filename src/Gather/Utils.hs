@@ -1,6 +1,7 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Gather.Utils where
 
-import           Data.ByteString as BS
+--import           Data.ByteString as BS
 import           Data.Text as T
 import qualified Network.HTTP as NH
 import           System.Time
