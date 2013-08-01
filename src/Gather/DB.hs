@@ -31,7 +31,7 @@ urlInDb test_url database = do
         let loop = do
             (_, val) <- kccurget cur False
             case (A.decode (LBS.fromStrict val) :: Maybe LinkData) of
-                Nothing -> undefined -- TODO: What happens when Aeson cannot decode?
+                Nothing -> return $ Right False
                 Just (LinkData _ _ u _ _ _) ->
                     if u == test_url
                     then return $ Right True

@@ -29,7 +29,7 @@ main = do
 site :: BS.ByteString -> Snap ()
 site db_location =
     ifTop (method POST $ submitHandler db_location) <|>
-    writeBS ("Nothing to see here. " `BS.append` db_location)
+    writeBS "Nothing to see here. "
 
 submitHandler :: BS.ByteString -> Snap ()
 submitHandler db_location = do
