@@ -1,10 +1,10 @@
 Name:                gather
 Version:             0.1
-Synopsis:            Project Synopsis Here
-Description:         Project Description Here
-License:             AllRightsReserved
-Author:              Author
-Maintainer:          maintainer@example.com
+Synopsis:            Snap application that takes data and puts it into a persistent KyotoCabinet store.
+Description:         This is intended as a backend for a tenyks linkscraper service. It takes JSON as POST data structured a certain way, summzarizes it and stores it.
+License:             MIT
+Author:              Quinlan Pfiffer
+Maintainer:          qpfiffer@gmail.com
 Stability:           Experimental
 Category:            Web
 Build-type:          Simple
