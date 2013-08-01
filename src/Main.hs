@@ -28,7 +28,7 @@ main = do
 
 site :: BS.ByteString -> Snap ()
 site db_location =
-    ifTop (method POST $ submitHandler db_location) <|>
+    method POST $ submitHandler db_location <|>
     writeBS "Nothing to see here. "
 
 submitHandler :: BS.ByteString -> Snap ()
