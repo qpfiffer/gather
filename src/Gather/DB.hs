@@ -61,11 +61,18 @@ insertUrl posted_url poster db = do
         (Right True) -> return $ InsertResult "Someone tried to submit a duplicate URL."
         (Right False) -> do
             time_submitted <- getTimeStamp
-            tags <- fmap parseTags $ openURL $ BS.unpack posted_url
             rand_color <- getRandomPersonColor
-            let page_title = getTitle tags
-                summation = summarize 300 tags
-            kcdbset db (BS.pack $ show time_submitted) $ LBS.toStrict $ A.encode $
-                LinkData time_submitted page_title text_url (TE.decodeUtf8 poster) summation rand_color
-            return $ InsertResult "MUDADA"
+            if (BS.take 5 posted_url) /= "https"
+                then do
+                    tags <- fmap parseTags $ openURL $ BS.unpack posted_url
+                    let page_title = getTitle tags
+                        summation = summarize 300 tags
+                    kcdbset db (BS.pack $ show time_submitted) $ LBS.toStrict $ A.encode $
+                        LinkData time_submitted page_title text_url (TE.decodeUtf8 poster) summation rand_color
+                    return $ InsertResult "MUDADA"
+                else do
+                    -- HTTP-4000 can't do https. :(
+                    kcdbset db (BS.pack $ show time_submitted) $ LBS.toStrict $ A.encode $
+                        LinkData time_submitted (TE.decodeUtf8 posted_url) text_url (TE.decodeUtf8 poster) "..." rand_color
+                    return $ InsertResult "MUDADA"
         (Left msg) -> return $ InsertResult $ T.pack msg
