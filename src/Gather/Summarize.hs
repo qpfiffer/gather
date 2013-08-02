@@ -13,5 +13,7 @@ summarize summary_size tags =
     case Prelude.length tags of
         0 -> "..."
         _ -> T.pack $ Prelude.take summary_size $
-            Prelude.foldl combineTags " " $
-            Prelude.map fromTagText $ Prelude.filter TS.isTagText tags
+                Prelude.foldl combineTags " " $
+                    Prelude.map fromTagText $ Prelude.filter TS.isTagText relevant_stuff
+  where
+    relevant_stuff = (sections (~== ("<body>" :: String)) tags) !! 0
