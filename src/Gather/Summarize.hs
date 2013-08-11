@@ -33,6 +33,6 @@ general_summarize summary_size tags =
 summarize :: Text -> Int -> [Tag String] -> T.Text
 summarize url summary_size tags =
     case getDomain url of
-        "youtube" -> "youtube"
-        "twitter" -> "twitter"
+        "youtube" -> general_summarize summary_size tags
+        "twitter" -> general_summarize summary_size tags
         _ -> general_summarize summary_size tags
