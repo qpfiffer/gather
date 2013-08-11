@@ -28,20 +28,21 @@ urlInDb :: Text -> KcDb -> IO (Either String Bool)
 urlInDb test_url database = do
     kcwithdbcursor database $ \cur -> do
         kccurjumpback cur
-        let loop = do
+        let loop x = do
             (_, val) <- kccurget cur False
             case (A.decode (LBS.fromStrict val) :: Maybe LinkData) of
                 Nothing -> return $ Right False
                 Just (LinkData _ _ u _ _ _) ->
                     if u == test_url
                     then return $ Right True
-                    else do
+                    else
                         -- #DEBUG
                         -- BS.putStrLn $ BS.concat [TE.encodeUtf8 u, ", ", TE.encodeUtf8 test_url]
-                        kccurstepback cur
-                        loop
-                        -- return $ Right False
-        loop `catch` \(_::KcException) ->
+                        kccurstepback cur >>= \_ ->
+                            if x > 0
+                            then loop (x-1)
+                            else return $ Right False
+        loop filter_max `catch` \(_::KcException) ->
             kcdbecode database >>= \error_code ->
             case error_code of
                 KCENOREC -> return $ Right False
