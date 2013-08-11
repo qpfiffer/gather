@@ -16,10 +16,10 @@ openURL x = do
 
 getTitle :: [Tag String] -> T.Text
 getTitle tags =
-    T.pack that_text
+    T.pack title_text
   where
     the_sections = sections (~== ("<title>" :: String)) tags
-    TagText that_text =
+    TagText title_text =
         case Prelude.length the_sections of
             0 -> TagText ("" :: String)
             _ -> the_sections !! 0 !! 1

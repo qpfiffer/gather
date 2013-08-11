@@ -66,7 +66,7 @@ insertUrl posted_url poster db = do
                 then do
                     tags <- fmap parseTags $ openURL $ BS.unpack posted_url
                     let page_title = getTitle tags
-                        summation = summarize 300 tags
+                        summation = summarize text_url 300 tags
                     kcdbset db (BS.pack $ show time_submitted) $ LBS.toStrict $ A.encode $
                         LinkData time_submitted page_title text_url (TE.decodeUtf8 poster) summation rand_color
                     return $ InsertResult "MUDADA"
